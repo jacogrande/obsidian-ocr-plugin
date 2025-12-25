@@ -22,6 +22,7 @@ export interface QueueModalConfig {
   onDeleteNote?: (notePath: string) => Promise<boolean>;
   onRemoveSyncedJob?: (jobId: string) => Promise<void>;
   onJobsChanged?: () => void;
+  hasUnsyncedJob?: (jobId: string) => boolean;
 }
 
 /**
@@ -45,6 +46,9 @@ export class QueueModal extends Modal {
   private refreshButton!: HTMLButtonElement;
   private syncButton!: HTMLButtonElement;
   private retryAllButton!: HTMLButtonElement;
+
+  // Prevent duplicate auto-syncs
+  private isAutoSyncing = false;
 
   constructor(app: App, config: QueueModalConfig) {
     super(app);
@@ -150,6 +154,26 @@ export class QueueModal extends Modal {
       this.updateJobList();
       // Notify parent to update status bar
       this.config.onJobsChanged?.();
+
+      // Auto-sync if there are completed jobs that haven't been synced yet
+      // Only do this once per modal open to avoid loops
+      if (!this.isAutoSyncing) {
+        const hasUnsyncedCompleted = this.jobs.some(
+          (job) => job.status === 'completed' && !this.config.getSyncedNotePath?.(job.id)
+        );
+        if (hasUnsyncedCompleted) {
+          this.isAutoSyncing = true;
+          // Trigger sync in background
+          this.config.onSyncNow().then(() => {
+            // Reload jobs after sync to update the UI
+            this.loadJobs();
+          }).catch((err) => {
+            console.error('Auto-sync failed:', err);
+          }).finally(() => {
+            this.isAutoSyncing = false;
+          });
+        }
+      }
     } catch (error) {
       console.error('Failed to load jobs:', error);
       this.showError('Failed to load jobs. Please try again.');

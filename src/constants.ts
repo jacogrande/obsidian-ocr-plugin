@@ -41,7 +41,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   organizationStyle: 'flat',
 
   // Sync Options
-  pollInterval: 30000, // 30 seconds
+  pollInterval: 10000, // 10 seconds
   autoSync: true,
   keepLocalCopy: true,
   notifyOnSync: true,
