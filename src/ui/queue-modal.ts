@@ -19,6 +19,8 @@ export interface QueueModalConfig {
   onSyncNow: () => Promise<void>;
   onOpenNote?: (notePath: string) => void;
   getSyncedNotePath?: (jobId: string) => string | undefined;
+  onDeleteNote?: (notePath: string) => Promise<boolean>;
+  onRemoveSyncedJob?: (jobId: string) => Promise<void>;
 }
 
 /**
@@ -295,11 +297,22 @@ export class QueueModal extends Modal {
     // Job info
     const info = item.createDiv({ cls: 'queue-job-info' });
 
+    // Use filename as title, with better fallback
+    const displayName = this.getJobDisplayName(job);
     const title = info.createDiv({ cls: 'queue-job-title' });
-    title.setText(job.filename || `Job ${job.id.substring(0, 8)}`);
+    title.setText(displayName);
 
     const meta = info.createDiv({ cls: 'queue-job-meta' });
     meta.setText(this.formatJobMeta(job));
+
+    // Show note path for synced completed jobs
+    if (job.status === 'completed') {
+      const notePath = this.config.getSyncedNotePath?.(job.id);
+      if (notePath) {
+        const notePathEl = info.createDiv({ cls: 'queue-job-note-path' });
+        notePathEl.setText(`→ ${notePath}`);
+      }
+    }
 
     // Error message for failed jobs
     if (job.status === 'failed' && job.error) {
@@ -324,6 +337,18 @@ export class QueueModal extends Modal {
         });
       }
     }
+  }
+
+  /**
+   * Get a user-friendly display name for a job.
+   */
+  private getJobDisplayName(job: Job): string {
+    if (job.filename) {
+      // Remove extension for cleaner display
+      return job.filename.replace(/\.[^/.]+$/, '');
+    }
+    // Fallback to truncated ID
+    return `Scan ${job.id.substring(0, 8)}`;
   }
 
   private renderJobActions(job: Job, container: HTMLElement): void {
@@ -401,16 +426,25 @@ export class QueueModal extends Modal {
   }
 
   private async handleDeleteJob(job: Job, button: HTMLButtonElement): Promise<void> {
-    // First tap: show confirmation
+    const notePath = this.config.getSyncedNotePath?.(job.id);
+    const hasSyncedNote = Boolean(notePath);
+
+    // First tap: show confirmation with context
     if (!button.hasClass('is-confirming')) {
       button.addClass('is-confirming');
-      button.setText('Confirm?');
+      // Show what will be deleted
+      if (hasSyncedNote) {
+        button.setText('Delete note too?');
+      } else {
+        button.setText('Confirm?');
+      }
 
       // Reset after 3 seconds if not confirmed
       setTimeout(() => {
         if (button.hasClass('is-confirming')) {
           button.removeClass('is-confirming');
-          button.setText('Delete');
+          button.empty();
+          setIcon(button, 'trash-2');
         }
       }, 3000);
       return;
@@ -422,19 +456,40 @@ export class QueueModal extends Modal {
     button.removeClass('is-confirming');
 
     try {
+      // Delete the job from the backend first
       await this.config.syncClient.deleteJob(job.id);
+
+      // If there's a synced note, delete it from the vault
+      let noteDeleted = false;
+      if (hasSyncedNote && notePath && this.config.onDeleteNote) {
+        noteDeleted = await this.config.onDeleteNote(notePath);
+      }
+
+      // Remove from sync state
+      if (this.config.onRemoveSyncedJob) {
+        await this.config.onRemoveSyncedJob(job.id);
+      }
 
       // Remove from local list
       this.jobs = this.jobs.filter((j) => j.id !== job.id);
       this.updateJobList();
 
-      new Notice('Job deleted');
+      // Show descriptive notice
+      const filename = job.filename || 'Job';
+      if (noteDeleted) {
+        new Notice(`Deleted "${filename}" and its note`);
+      } else if (hasSyncedNote) {
+        new Notice(`Deleted "${filename}" (note file not found)`);
+      } else {
+        new Notice(`Deleted "${filename}"`);
+      }
     } catch (error) {
       console.error('Delete failed:', error);
       new Notice(`Delete failed: ${getUserErrorMessage(error)}`);
       button.disabled = false;
       button.removeClass('is-loading');
-      button.setText('Delete');
+      button.empty();
+      setIcon(button, 'trash-2');
     }
   }
 

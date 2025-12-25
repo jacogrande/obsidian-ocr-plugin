@@ -192,9 +192,15 @@ export class JobPoller {
 
       // Notify if we synced anything
       if (result.syncedCount > 0 && settings.notifyOnSync) {
-        new Notice(
-          `Synced ${result.syncedCount} new note${result.syncedCount !== 1 ? 's' : ''} to ${settings.outputFolder}/`
-        );
+        if (result.syncedCount === 1 && result.results[0]?.notePath) {
+          // Single note: show the specific file path
+          new Notice(`Created: ${result.results[0].notePath}`);
+        } else {
+          // Multiple notes: show count and folder
+          new Notice(
+            `Synced ${result.syncedCount} new note${result.syncedCount !== 1 ? 's' : ''} to ${settings.outputFolder}/`
+          );
+        }
       }
 
       // Callback

@@ -711,6 +711,15 @@
   line-height: 1.3;
 }
 
+.queue-job-note-path {
+  font-size: 0.8em;
+  color: var(--text-faint);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Job Actions - Stacked on mobile */
 .queue-job-actions {
   flex-shrink: 0;

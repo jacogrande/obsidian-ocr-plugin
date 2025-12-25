@@ -413,9 +413,15 @@ export default class NotebookScannerPlugin extends Plugin {
         new Notice('No new notes to sync.');
       } else {
         if (result.syncedCount > 0) {
-          new Notice(
-            `Synced ${result.syncedCount} new note${result.syncedCount !== 1 ? 's' : ''} to ${this.settings.outputFolder}/`
-          );
+          if (result.syncedCount === 1 && result.results[0]?.notePath) {
+            // Single note: show the specific file path
+            new Notice(`Created: ${result.results[0].notePath}`);
+          } else {
+            // Multiple notes: show count and folder
+            new Notice(
+              `Synced ${result.syncedCount} new note${result.syncedCount !== 1 ? 's' : ''} to ${this.settings.outputFolder}/`
+            );
+          }
         }
 
         if (result.failedCount > 0) {
@@ -458,9 +464,35 @@ export default class NotebookScannerPlugin extends Plugin {
       getSyncedNotePath: (jobId: string) => {
         return this.syncStateManager.getSyncedJob(jobId)?.notePath;
       },
+      onDeleteNote: async (notePath: string) => {
+        return this.deleteNoteFile(notePath);
+      },
+      onRemoveSyncedJob: async (jobId: string) => {
+        await this.syncStateManager.removeSynced(jobId);
+      },
     });
 
     modal.open();
+  }
+
+  /**
+   * Delete a note file from the vault.
+   * Returns true if the file was deleted, false if not found.
+   */
+  private async deleteNoteFile(notePath: string): Promise<boolean> {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(notePath);
+      if (file instanceof TFile) {
+        await this.app.vault.delete(file);
+        console.log(`Deleted note: ${notePath}`);
+        return true;
+      }
+      console.log(`Note not found: ${notePath}`);
+      return false;
+    } catch (error) {
+      console.error(`Failed to delete note ${notePath}:`, error);
+      return false;
+    }
   }
 
   /**
