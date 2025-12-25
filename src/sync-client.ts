@@ -1,9 +1,8 @@
 /**
  * Sync Client - Handles all communication with the backend service.
  *
- * This module defines the ISyncClient interface and provides a mock
- * implementation for development. The real implementation will use
- * Obsidian's requestUrl API.
+ * This module defines the ISyncClient interface and provides both a real
+ * implementation using Obsidian's requestUrl API and a mock for development.
  *
  * Following:
  * - Interface Segregation Principle: ISyncClient is focused on sync operations
@@ -11,6 +10,7 @@
  * - Single Responsibility Principle: Only handles backend communication
  */
 
+import { requestUrl, RequestUrlResponse } from 'obsidian';
 import type {
   ISyncClient,
   Job,
@@ -20,7 +20,271 @@ import type {
   BackendSettings,
   HealthResponse,
   PluginSettings,
+  ApiError,
 } from './types';
+
+// ============================================================================
+// Real Implementation
+// ============================================================================
+
+/**
+ * Response from the signed URL endpoint.
+ */
+interface SignedUrlResponse {
+  signedUrl: string;
+  path: string;
+}
+
+/**
+ * Upload metadata for finalization.
+ */
+interface UploadMetadata {
+  path: string;
+  filename: string;
+  contentType: string;
+  size: number;
+}
+
+/**
+ * Response from the finalize endpoint.
+ */
+interface FinalizeResponse {
+  jobIds: string[];
+  message: string;
+}
+
+/**
+ * Real implementation of ISyncClient using the backend API.
+ *
+ * Upload flow:
+ * 1. Get signed URL for each file
+ * 2. Upload file directly to signed URL
+ * 3. Finalize all uploads to create jobs
+ */
+export class SyncClient implements ISyncClient {
+  private settings: PluginSettings;
+
+  constructor(settings: PluginSettings) {
+    this.settings = settings;
+  }
+
+  /**
+   * Update local settings reference (called when plugin settings change).
+   */
+  setPluginSettings(settings: PluginSettings): void {
+    this.settings = settings;
+  }
+
+  // ============================================================================
+  // Upload Methods
+  // ============================================================================
+
+  async uploadImages(files: File[]): Promise<UploadResponse> {
+    const uploadedMetadata: UploadMetadata[] = [];
+    const failed: Array<{ filename: string; reason: string }> = [];
+
+    // Step 1 & 2: Get signed URL and upload each file
+    for (const file of files) {
+      try {
+        // Step 1: Get signed upload URL
+        const signedUrlResponse = await this.getSignedUrl(file.name, file.type);
+
+        // Step 2: Upload to signed URL
+        await this.uploadToSignedUrl(signedUrlResponse.signedUrl, file);
+
+        // Track successful upload for finalization
+        uploadedMetadata.push({
+          path: signedUrlResponse.path,
+          filename: file.name,
+          contentType: file.type || 'image/jpeg',
+          size: file.size,
+        });
+      } catch (error) {
+        console.error(`Failed to upload ${file.name}:`, error);
+        failed.push({
+          filename: file.name,
+          reason: error instanceof Error ? error.message : 'Upload failed',
+        });
+      }
+    }
+
+    // If no files uploaded successfully, return early
+    if (uploadedMetadata.length === 0) {
+      return {
+        jobIds: [],
+        message: 'No files uploaded successfully',
+        failed: failed.length > 0 ? failed : undefined,
+      };
+    }
+
+    // Step 3: Finalize uploads to create jobs
+    try {
+      const finalizeResponse = await this.finalizeUploads(uploadedMetadata);
+      return {
+        jobIds: finalizeResponse.jobIds,
+        message: finalizeResponse.message,
+        failed: failed.length > 0 ? failed : undefined,
+      };
+    } catch (error) {
+      console.error('Failed to finalize uploads:', error);
+      // All uploads failed at finalization
+      return {
+        jobIds: [],
+        message: 'Failed to finalize uploads',
+        failed: [
+          ...failed,
+          ...uploadedMetadata.map((m) => ({
+            filename: m.filename,
+            reason: 'Finalization failed',
+          })),
+        ],
+      };
+    }
+  }
+
+  /**
+   * Step 1: Get a signed URL for uploading a file.
+   */
+  private async getSignedUrl(filename: string, contentType: string): Promise<SignedUrlResponse> {
+    const response = await this.request<SignedUrlResponse>('POST', '/api/upload/signed-url', {
+      filename,
+      contentType: contentType || 'image/jpeg',
+    });
+    return response;
+  }
+
+  /**
+   * Step 2: Upload file directly to the signed URL.
+   */
+  private async uploadToSignedUrl(signedUrl: string, file: File): Promise<void> {
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Use fetch for signed URL upload (external URL, not our API)
+    const response = await fetch(signedUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type || 'image/jpeg',
+      },
+      body: arrayBuffer,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+    }
+  }
+
+  /**
+   * Step 3: Finalize uploads to create processing jobs.
+   */
+  private async finalizeUploads(uploads: UploadMetadata[]): Promise<FinalizeResponse> {
+    const response = await this.request<FinalizeResponse>('POST', '/api/upload/finalize', {
+      uploads,
+    });
+    return response;
+  }
+
+  // ============================================================================
+  // Job Methods
+  // ============================================================================
+
+  async getJobs(status?: JobStatus): Promise<Job[]> {
+    const endpoint = status ? `/api/jobs?status=${status}` : '/api/jobs';
+    const response = await this.request<{ jobs: Job[] }>('GET', endpoint);
+    return response.jobs;
+  }
+
+  async getJob(jobId: string): Promise<Job> {
+    const response = await this.request<{ job: Job }>('GET', `/api/jobs/${jobId}`);
+    return response.job;
+  }
+
+  async getResult(jobId: string): Promise<ProcessedNote> {
+    const response = await this.request<{ result: ProcessedNote }>('GET', `/api/results/${jobId}`);
+    return response.result;
+  }
+
+  async deleteJob(jobId: string): Promise<void> {
+    await this.request<void>('DELETE', `/api/jobs/${jobId}`);
+  }
+
+  async retryJob(jobId: string): Promise<void> {
+    await this.request<void>('POST', `/api/jobs/${jobId}/retry`);
+  }
+
+  // ============================================================================
+  // Settings Methods
+  // ============================================================================
+
+  async getSettings(): Promise<BackendSettings> {
+    const response = await this.request<{ settings: BackendSettings }>('GET', '/api/settings');
+    return response.settings;
+  }
+
+  async updateSettings(settings: Partial<BackendSettings>): Promise<BackendSettings> {
+    const response = await this.request<{ settings: BackendSettings }>(
+      'PATCH',
+      '/api/settings',
+      settings
+    );
+    return response.settings;
+  }
+
+  // ============================================================================
+  // Health Check
+  // ============================================================================
+
+  async checkHealth(): Promise<HealthResponse> {
+    const response = await this.request<HealthResponse>('GET', '/api/health');
+    return response;
+  }
+
+  // ============================================================================
+  // HTTP Helper
+  // ============================================================================
+
+  private async request<T>(
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+    endpoint: string,
+    body?: unknown
+  ): Promise<T> {
+    const url = `${this.settings.serviceUrl.replace(/\/$/, '')}${endpoint}`;
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.settings.apiKey}`,
+    };
+
+    if (body) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    let response: RequestUrlResponse;
+    try {
+      response = await requestUrl({
+        url,
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        throw: false,
+      });
+    } catch (error) {
+      throw new Error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Handle error responses
+    if (response.status >= 400) {
+      const errorBody = response.json as ApiError | undefined;
+      const message = errorBody?.message || `Request failed with status ${response.status}`;
+      throw new Error(message);
+    }
+
+    // Return empty object for 204 No Content
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return response.json as T;
+  }
+}
 
 // ============================================================================
 // Mock Implementation for Development
@@ -251,13 +515,14 @@ export class MockSyncClient implements ISyncClient {
 
 /**
  * Create a sync client instance.
- * Currently returns a mock client; will return real client when implemented.
+ * Returns real client when configured, mock client for development.
  */
 export function createSyncClient(settings: PluginSettings): ISyncClient {
-  // TODO: Return real SyncClient when backend is available
-  // if (settings.serviceUrl) {
-  //   return new SyncClient(settings);
-  // }
+  // Use real client when service URL is configured
+  if (settings.serviceUrl && settings.apiKey) {
+    return new SyncClient(settings);
+  }
 
+  // Fall back to mock client for development/testing
   return new MockSyncClient(settings);
 }
