@@ -38,6 +38,9 @@ export class OnboardingModal extends Modal {
   private connectionStatus: 'idle' | 'testing' | 'success' | 'error' = 'idle';
   private connectionError = '';
 
+  // UI elements that need updating
+  private testButton: HTMLButtonElement | null = null;
+
   constructor(app: App, config: OnboardingConfig) {
     super(app);
     this.config = config;
@@ -173,6 +176,7 @@ export class OnboardingModal extends Modal {
     });
     urlInput.addEventListener('input', (e) => {
       this.serviceUrl = (e.target as HTMLInputElement).value;
+      this.updateTestButtonState();
       this.resetConnectionStatus();
     });
 
@@ -192,6 +196,7 @@ export class OnboardingModal extends Modal {
     });
     keyInput.addEventListener('input', (e) => {
       this.apiKey = (e.target as HTMLInputElement).value;
+      this.updateTestButtonState();
       this.resetConnectionStatus();
     });
 
@@ -215,12 +220,12 @@ export class OnboardingModal extends Modal {
       this.renderCurrentStep();
     });
 
-    const testBtn = actions.createEl('button', {
+    this.testButton = actions.createEl('button', {
       text: 'Test Connection',
       cls: 'onboarding-button onboarding-button-primary',
     });
-    testBtn.disabled = !this.canTestConnection();
-    testBtn.addEventListener('click', () => this.testConnection());
+    this.testButton.disabled = !this.canTestConnection();
+    this.testButton.addEventListener('click', () => this.testConnection());
 
     // Skip link
     const skip = container.createDiv({ cls: 'onboarding-skip' });
@@ -273,6 +278,12 @@ export class OnboardingModal extends Modal {
 
   private canTestConnection(): boolean {
     return this.serviceUrl.trim().length > 0 && this.apiKey.trim().length > 0;
+  }
+
+  private updateTestButtonState(): void {
+    if (this.testButton) {
+      this.testButton.disabled = !this.canTestConnection();
+    }
   }
 
   private resetConnectionStatus(): void {
