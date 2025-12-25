@@ -187,14 +187,31 @@ export class JobPoller {
     try {
       this.isPolling = true;
 
-      // Fetch all jobs to update status bar
+      // Fetch all jobs
       const allJobs = await this.config.getSyncClient().getJobs();
-      if (this.config.onStatusChanged) {
+
+      // Check if we have unsynced completed jobs
+      const unsyncedCompleted = allJobs.filter(
+        (job) => job.status === 'completed' && !this.config.syncStateManager.isSynced(job.id)
+      );
+
+      // Update status bar based on current state
+      // If we have jobs to sync, the status bar will show them as "processing"
+      // until we're done creating notes
+      if (unsyncedCompleted.length === 0 && this.config.onStatusChanged) {
+        // No jobs to sync, show actual status
         this.config.onStatusChanged(allJobs);
       }
+      // If we have jobs to sync, don't update status bar yet -
+      // it would show "Ready" before notes are created
 
-      // Sync completed jobs
+      // Sync completed jobs (this creates the notes)
       const result = await this.syncCompletedJobsFromList(allJobs);
+
+      // After notes are created, update status bar with final state
+      if (unsyncedCompleted.length > 0 && this.config.onStatusChanged) {
+        this.config.onStatusChanged(allJobs);
+      }
 
       // Reset error counter on success
       this.consecutiveErrors = 0;
