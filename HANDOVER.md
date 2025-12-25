@@ -1,177 +1,121 @@
 # Session Handover - Notebook Scanner
 
-**Date**: 2024-12-24
+**Date**: 2025-12-25
 **Project**: Obsidian plugin for scanning notebook pages with LLM-powered OCR
 
 ---
 
 ## Session Summary
 
-### Work Completed
+### Work Completed This Session
 
-**Phase 1: Foundation ✅**
-- Project setup with TypeScript, esbuild, Obsidian API
-- `types.ts` - All interfaces (Job, ProcessedNote, ISyncClient, etc.)
-- `constants.ts` - Default settings, constraints, templates
-- `errors.ts` - Custom error classes with user-friendly messages
-- `sync-client.ts` - ISyncClient interface + MockSyncClient for development
-- `settings.ts` - Full settings tab with 5 sections
-- `main.ts` - Plugin lifecycle, commands, data persistence
+**Real Backend Integration**
+- Implemented `SyncClient` class with 3-step signed URL upload flow:
+  1. `POST /api/upload/signed-url` → get signed URL and path
+  2. `PUT` to signed URL → upload binary data
+  3. `POST /api/upload/finalize` → create processing jobs
+- All job/result endpoints implemented (`getJobs`, `getResult`, `retryJob`, `deleteJob`)
+- Tested full pipeline with real backend at `obsidian-ocr-server.vercel.app`
 
-**Phase 2: Core Upload Flow ✅**
-- `src/ui/upload-modal.ts` - Drag & drop upload UI
-- File picker integration with validation
-- Progress indication with animated bars
-- Local image saving to vault
+**Bug Fixes**
+- Fixed: "Test Connection" button stayed disabled after entering credentials
+  - Button now updates dynamically as user types
+- Fixed: Plugin used MockSyncClient instead of real client after onboarding
+  - `saveSettings()` now recreates sync client
+  - `JobPoller` uses `getSyncClient()` getter instead of stale reference
 
-**Phase 3: Sync & Note Creation ✅**
-- `sync-state.ts` - SyncStateManager class
-- `note-creator.ts` - NoteCreator with template system
-- `job-poller.ts` - Background polling with backoff
-- Full integration with main.ts
+**UX Improvements (from UX-GAPS.md)**
+- Completed 10/15 identified UX issues:
+  - Status bar shows "Ready" when idle (not empty)
+  - Upload modal shows completion state with View Queue/Done buttons
+  - Sync notices include folder path
+  - Delete requires two-tap confirmation on mobile
+  - Poller can resume after errors (status bar shows "Paused - tap to resume")
+  - Added "Setup Wizard" command for re-onboarding
+  - Sync progress shows "Syncing 3/10..." for batches
+  - Added "Retry All Failed" bulk action in queue
 
-**Phase 4: Queue Management ✅**
-- `src/ui/queue-modal.ts` - Queue modal UI
-- Wire up retry/delete actions
-- Sync Now command integration
-
-**Phase 5: Polish ✅ (Mobile-First)**
-- `styles.css` - Complete mobile-first rewrite
-  - CSS variables for consistency
-  - 44px touch targets throughout
-  - iOS safe area support (`env(safe-area-inset-bottom)`)
-  - Reduced motion support
-  - Desktop enhancements via `@media (min-width: 600px)`
-- `src/ui/status-bar.ts` - Status bar widget showing sync status
-- `src/ui/onboarding-modal.ts` - First-time setup flow with connection test
-- Mobile-friendly error handling with status bar integration
+**Documentation**
+- Created comprehensive README.md
+- Updated TESTING.md with 50+ test cases covering all UX flows
 
 ---
 
 ## Current State
 
-**Branch**: Not a git repository (no git init done)
+**Branch**: `main`
 
-**Uncommitted Changes**: All files are new, not tracked
+**Uncommitted Changes**: None - working tree clean
 
-**Actively Working On**: Phases 1-5 complete
+**Unpushed Commits**: 2 commits ahead of origin
+- `08490e2` fix: use real sync client after onboarding configuration
+- `c2200b2` fix: enable Test Connection button when inputs are filled
 
-**Build Status**: ✅ Successful build with all Phase 1-5 components integrated
+**Build Status**: ✅ Passing
 
----
-
-## Project Structure
-
-```
-notebook-scanner/
-├── src/
-│   ├── main.ts              # Plugin entry point (fully integrated)
-│   ├── settings.ts          # Settings tab
-│   ├── sync-client.ts       # ISyncClient + MockSyncClient
-│   ├── sync-state.ts        # SyncStateManager
-│   ├── note-creator.ts      # NoteCreator with templates
-│   ├── job-poller.ts        # Background polling
-│   ├── types.ts             # All interfaces
-│   ├── constants.ts         # Defaults and constraints
-│   ├── errors.ts            # Error classes
-│   └── ui/
-│       ├── upload-modal.ts  # Upload UI
-│       ├── queue-modal.ts   # Queue management UI
-│       ├── status-bar.ts    # Status bar widget
-│       └── onboarding-modal.ts # First-time setup
-├── styles.css               # Mobile-first CSS
-├── manifest.json            # Plugin manifest
-├── package.json             # Dependencies
-├── tsconfig.json            # TypeScript config
-├── esbuild.config.mjs       # Build config
-├── .gitignore               # Git ignore
-├── guide.md                 # iOS dev guide
-├── spec.md                  # Product spec
-├── backend-spec.md          # Backend API PRD
-└── plan.md                  # Implementation plan
-```
-
----
-
-## Key Decisions Made
-
-1. **Architecture**: Plugin + External Service
-   - iOS suspends backgrounded apps, can't process 100 images locally
-   - User uploads → server processes → plugin polls for results
-
-2. **MockSyncClient**: Development without backend
-   - Simulates upload, processing delays, 90% success rate
-   - Real SyncClient will use `requestUrl()` when backend exists
-
-3. **iOS Compatibility**: Strict adherence to constraints
-   - No Node.js APIs, no regex lookbehind, HTTPS only
-   - Using Obsidian's `requestUrl()` for HTTP
-
-4. **Template System**: Mustache-like placeholders
-   - `{{title}}`, `{{content}}`, `{{tags}}`, etc.
-   - Supports YAML frontmatter toggle
-
-5. **Mobile-First CSS**: Base styles for mobile
-   - 44px touch targets minimum
-   - Desktop enhancements via media queries
-   - Stacked layouts on mobile, horizontal on desktop
+**Deployed To**: `/Users/jackson/vaults/personal/.obsidian/plugins/notebook-scanner`
 
 ---
 
 ## Blockers & Open Questions
 
-- **No blockers** currently
-- **Backend not built yet** - using MockSyncClient for now
-- Phase 6 features (camera capture, daily notes) are optional enhancements
+- **None currently** - full pipeline working with real backend
 
 ---
 
 ## Next Steps
 
 ### Immediate
+1. **Push unpushed commits**: `git push`
+2. **Test in Obsidian** with real notebook photos to verify LLM extraction quality
 
-1. **Initialize git repo** and make first commit:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: Phases 1-5 complete"
-   ```
+### Remaining UX Issues (Nice to Have - from UX-GAPS.md)
+- #11: Show warning if local copy save fails
+- #12: Increase connection test success delay to 1.5s
+- #13: Log filename conflict resolution
+- #14: Add explicit "Open Note" button for completed jobs
+- #15: Add helper text for disabled Test Connection button
 
-2. **Manual Testing** - Test the plugin in Obsidian
-   - Copy build output to `.obsidian/plugins/notebook-scanner/`
-   - Enable plugin and test all flows
-
-### Phase 6: Advanced Features (Optional)
-- Custom note templates editor
-- Direct camera capture on mobile
-- Batch upload optimizations
+### Future Enhancements
 - Daily note integration
+- Batch upload optimizations
+- Custom template editor UI
 
 ---
 
-## Important Code Patterns
+## Key Decisions Made
 
-**SyncClient usage:**
-```typescript
-const client = createSyncClient(settings);
-const response = await client.uploadImages(files);
-const jobs = await client.getJobs('completed');
-```
+1. **Signed URL Upload Pattern**: 3-step process matches backend exactly
+   - Enables direct upload to Supabase storage
+   - Finalize step creates processing jobs
 
-**Status bar updates:**
-```typescript
-this.statusBarWidget.updateFromJobs(jobs);
-this.statusBarWidget.setSyncing(true/false);
-this.statusBarWidget.setError(true/false);
-```
+2. **Dynamic Sync Client**: Using getter function `getSyncClient()` in JobPoller
+   - Allows switching from Mock to Real client after onboarding
+   - No stale references after settings change
 
-**Onboarding check:**
-```typescript
-import { shouldShowOnboarding } from './ui/onboarding-modal';
-if (shouldShowOnboarding(this.settings)) {
-  this.showOnboarding();
-}
-```
+3. **Mobile-First Delete Confirmation**: Two-tap pattern
+   - First tap: "Confirm?" (reverts after 3s)
+   - Second tap: Actually deletes
+   - Prevents accidental deletions on mobile
+
+---
+
+## Important Files
+
+**Modified This Session**
+- `src/sync-client.ts` - Added real `SyncClient` implementation
+- `src/job-poller.ts` - Changed to use `getSyncClient()` getter
+- `src/main.ts` - Recreate sync client on settings save
+- `src/ui/onboarding-modal.ts` - Fixed Test Connection button state
+- `src/ui/queue-modal.ts` - Added Retry All Failed button
+- `src/ui/status-bar.ts` - Added sync progress display
+- `TESTING.md` - Comprehensive test cases
+- `README.md` - Full documentation
+
+**Key Files**
+- `.env` - Contains `USER_API_KEY` for backend testing
+- `deploy.sh` - Deploys to local vault
+- `UX-GAPS.md` - Tracks UX issues (10/15 complete)
 
 ---
 
@@ -181,27 +125,46 @@ if (shouldShowOnboarding(this.settings)) {
 # Navigate to project
 cd /Users/jackson/Code/projects/notebook-scanner
 
-# Install deps if needed
-npm install
+# Check status
+git status
+git log --oneline -5
 
-# Build to verify current state
+# Push unpushed commits
+git push
+
+# Build and deploy
 npm run build
+./deploy.sh
 
-# Initialize git (recommended)
-git init && git add . && git commit -m "Initial commit: Phases 1-5 complete"
-
-# Development mode
-npm run dev
-
-# Next: Test in Obsidian or start Phase 6
+# Test backend connection
+source .env
+curl -s "https://obsidian-ocr-server.vercel.app/api/health" \
+  -H "Authorization: Bearer $USER_API_KEY"
 ```
 
 ---
 
-## Mobile-First CSS Highlights
+## Backend API Reference
 
-- **Touch targets**: All buttons/inputs use `min-height: var(--ns-touch-target)` (44px)
-- **Safe areas**: `padding-bottom: calc(var(--ns-spacing-lg) + env(safe-area-inset-bottom, 0))`
-- **Stacked layouts**: Buttons stack vertically on mobile, horizontal on desktop
-- **Touch feedback**: Uses `:active` states instead of `:hover` for mobile
-- **Reduced motion**: `@media (prefers-reduced-motion: reduce)` disables animations
+```bash
+# Get signed upload URL
+POST /api/upload/signed-url
+Body: {"filename": "test.jpg", "contentType": "image/jpeg"}
+Returns: {"signedUrl": "...", "path": "..."}
+
+# Upload to signed URL
+PUT <signedUrl>
+Headers: Content-Type: image/jpeg
+Body: <binary data>
+
+# Finalize upload
+POST /api/upload/finalize
+Body: {"uploads": [{"path": "...", "filename": "...", "contentType": "...", "size": 123}]}
+Returns: {"jobIds": ["..."], "message": "..."}
+
+# Check job status
+GET /api/jobs/<jobId>
+
+# Get result
+GET /api/results/<jobId>
+```
