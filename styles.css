@@ -1,0 +1,1222 @@
+/**
+ * Notebook Scanner Plugin Styles
+ * Mobile-First Design Approach
+ *
+ * Base styles are optimized for mobile, with desktop enhancements via media queries.
+ * Touch targets: minimum 44x44px
+ * Safe areas: Respects iOS notch and home indicator
+ */
+
+/* ============================================================================
+   CSS Variables for Consistency
+   ============================================================================ */
+
+.notebook-scanner-upload-modal,
+.notebook-scanner-queue-modal,
+.notebook-scanner-onboarding-modal {
+  --ns-spacing-xs: 4px;
+  --ns-spacing-sm: 8px;
+  --ns-spacing-md: 12px;
+  --ns-spacing-lg: 16px;
+  --ns-spacing-xl: 20px;
+  --ns-spacing-2xl: 24px;
+
+  --ns-touch-target: 44px;
+  --ns-border-radius: 8px;
+  --ns-border-radius-lg: 12px;
+
+  --ns-transition-fast: 0.15s ease;
+  --ns-transition-normal: 0.2s ease;
+}
+
+/* ============================================================================
+   Settings Tab Styles
+   ============================================================================ */
+
+.notebook-scanner-placeholder-reference {
+  margin-top: var(--ns-spacing-sm);
+  padding: var(--ns-spacing-md);
+  background-color: var(--background-secondary);
+  border-radius: var(--ns-border-radius);
+  font-size: 12px;
+}
+
+.notebook-scanner-placeholder-reference ul {
+  margin: var(--ns-spacing-sm) 0 0 0;
+  padding-left: var(--ns-spacing-xl);
+}
+
+.notebook-scanner-placeholder-reference code {
+  background-color: var(--background-modifier-border);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+/* ============================================================================
+   Base Modal Styles (Mobile-First)
+   ============================================================================ */
+
+.notebook-scanner-upload-modal,
+.notebook-scanner-queue-modal,
+.notebook-scanner-onboarding-modal {
+  /* Full screen on mobile */
+  padding: 0;
+}
+
+.notebook-scanner-upload-modal .modal-content,
+.notebook-scanner-queue-modal .modal-content,
+.notebook-scanner-onboarding-modal .modal-content {
+  padding: var(--ns-spacing-lg);
+  /* Safe area for iOS devices */
+  padding-bottom: calc(var(--ns-spacing-lg) + env(safe-area-inset-bottom, 0));
+}
+
+/* Modal Headers */
+.upload-modal-header,
+.queue-modal-header,
+.onboarding-header {
+  margin-bottom: var(--ns-spacing-lg);
+  padding-bottom: var(--ns-spacing-md);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.upload-modal-header h2,
+.queue-modal-header h2,
+.onboarding-header h2 {
+  margin: 0;
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Upload Modal - Mobile First
+   ============================================================================ */
+
+/* Drop Zone - Large touch target for mobile */
+.upload-drop-zone {
+  border: 2px dashed var(--background-modifier-border);
+  border-radius: var(--ns-border-radius-lg);
+  padding: var(--ns-spacing-2xl) var(--ns-spacing-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--ns-transition-normal);
+  background-color: var(--background-secondary);
+  /* Ensure minimum touch area */
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-drop-zone:active {
+  transform: scale(0.98);
+  background-color: var(--background-secondary-alt);
+}
+
+.upload-drop-zone.drag-over {
+  border-color: var(--interactive-accent);
+  background-color: var(--background-modifier-hover);
+  border-style: solid;
+}
+
+.upload-drop-zone.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.upload-drop-zone-icon {
+  margin-bottom: var(--ns-spacing-md);
+  color: var(--text-muted);
+}
+
+.upload-drop-zone-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.upload-drop-zone-text p {
+  margin: var(--ns-spacing-xs) 0;
+  color: var(--text-normal);
+  font-size: 1em;
+}
+
+.upload-drop-zone-subtext {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.upload-drop-zone-hint {
+  margin-top: var(--ns-spacing-md);
+  font-size: 0.8em;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+/* File List */
+.upload-file-list {
+  margin-top: var(--ns-spacing-lg);
+  max-height: 300px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.upload-file-list-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--ns-spacing-xl);
+  font-style: italic;
+}
+
+.upload-file-list-header {
+  font-weight: 500;
+  margin-bottom: var(--ns-spacing-sm);
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+/* File Item - Touch-friendly */
+.upload-file-item {
+  display: flex;
+  align-items: center;
+  padding: var(--ns-spacing-md);
+  background-color: var(--background-secondary);
+  border-radius: var(--ns-border-radius);
+  margin-bottom: var(--ns-spacing-sm);
+  gap: var(--ns-spacing-md);
+  min-height: var(--ns-touch-target);
+}
+
+.upload-file-item.status-error {
+  background-color: rgba(var(--color-red-rgb), 0.1);
+}
+
+.upload-file-item.status-success {
+  background-color: rgba(var(--color-green-rgb), 0.1);
+}
+
+.upload-file-item-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.upload-file-item.status-error .upload-file-item-icon {
+  color: var(--text-error);
+}
+
+.upload-file-item.status-success .upload-file-item-icon {
+  color: var(--text-success);
+}
+
+.upload-file-item.status-uploading .upload-file-item-icon {
+  animation: ns-spin 1s linear infinite;
+}
+
+@keyframes ns-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.upload-file-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-file-item-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.95em;
+}
+
+.upload-file-item-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.upload-file-item-error {
+  font-size: 0.85em;
+  color: var(--text-error);
+  margin-top: 2px;
+}
+
+.upload-file-item-progress {
+  width: 100%;
+  height: 4px;
+  background-color: var(--background-modifier-border);
+  border-radius: 2px;
+  margin-top: var(--ns-spacing-sm);
+  overflow: hidden;
+}
+
+.upload-file-item-progress-bar {
+  height: 100%;
+  background-color: var(--interactive-accent);
+  border-radius: 2px;
+  transition: width var(--ns-transition-normal);
+}
+
+/* Remove button - Full touch target */
+.upload-file-item-remove {
+  flex-shrink: 0;
+  width: var(--ns-touch-target);
+  height: var(--ns-touch-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--ns-border-radius);
+  transition: all var(--ns-transition-fast);
+  margin: calc(-1 * var(--ns-spacing-sm));
+  margin-left: 0;
+}
+
+.upload-file-item-remove:active {
+  color: var(--text-error);
+  background-color: rgba(var(--color-red-rgb), 0.1);
+}
+
+/* Footer - Stack buttons on mobile */
+.upload-modal-footer {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--ns-spacing-sm);
+  margin-top: var(--ns-spacing-xl);
+  padding-top: var(--ns-spacing-lg);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.upload-cancel-button,
+.upload-submit-button {
+  padding: var(--ns-spacing-md) var(--ns-spacing-lg);
+  border-radius: var(--ns-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--ns-transition-fast);
+  min-height: var(--ns-touch-target);
+  font-size: 1em;
+  width: 100%;
+  text-align: center;
+}
+
+.upload-cancel-button {
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.upload-cancel-button:active {
+  background-color: var(--background-secondary-alt);
+}
+
+.upload-submit-button {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+}
+
+.upload-submit-button:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+.upload-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Upload Completion State */
+.upload-completion-summary {
+  text-align: center;
+  padding: var(--ns-spacing-md);
+  border-radius: var(--ns-border-radius);
+  font-weight: 500;
+  margin-bottom: var(--ns-spacing-md);
+}
+
+.upload-completion-summary.all-success {
+  background-color: rgba(var(--color-green-rgb), 0.1);
+  color: var(--text-success);
+}
+
+.upload-completion-summary.has-errors {
+  background-color: rgba(var(--color-orange-rgb), 0.1);
+  color: var(--text-warning);
+}
+
+.upload-completion-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ns-spacing-sm);
+}
+
+.upload-view-queue-button,
+.upload-done-button {
+  padding: var(--ns-spacing-md) var(--ns-spacing-lg);
+  border-radius: var(--ns-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--ns-transition-fast);
+  min-height: var(--ns-touch-target);
+  font-size: 1em;
+  width: 100%;
+  text-align: center;
+}
+
+.upload-view-queue-button {
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.upload-view-queue-button:active {
+  background-color: var(--background-secondary-alt);
+}
+
+.upload-done-button {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+}
+
+.upload-done-button:active {
+  opacity: 0.8;
+}
+
+/* Camera Button (Mobile Only) */
+.upload-camera-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ns-spacing-sm);
+  margin-top: var(--ns-spacing-lg);
+  padding: var(--ns-spacing-md) var(--ns-spacing-lg);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: 500;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all var(--ns-transition-fast);
+  width: 100%;
+}
+
+.upload-camera-button:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.upload-camera-button-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-camera-button-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================================================
+   Queue Modal - Mobile First
+   ============================================================================ */
+
+/* Toolbar - Stacked on mobile */
+.queue-modal-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ns-spacing-md);
+  margin-bottom: var(--ns-spacing-lg);
+  padding-bottom: var(--ns-spacing-md);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.queue-toolbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ns-spacing-sm);
+}
+
+.queue-filter-container {
+  display: flex;
+  align-items: center;
+  gap: var(--ns-spacing-sm);
+  flex: 1;
+}
+
+.queue-filter-label {
+  font-size: 0.9em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.queue-filter-select {
+  flex: 1;
+  padding: var(--ns-spacing-sm) var(--ns-spacing-md);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 1em;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.queue-toolbar-actions {
+  display: flex;
+  gap: var(--ns-spacing-sm);
+}
+
+.queue-refresh-button {
+  width: var(--ns-touch-target);
+  height: var(--ns-touch-target);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ns-border-radius);
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--ns-transition-fast);
+}
+
+.queue-refresh-button:active {
+  background-color: var(--background-secondary-alt);
+  color: var(--text-normal);
+}
+
+.queue-refresh-button.is-spinning svg {
+  animation: ns-spin 1s linear infinite;
+}
+
+.queue-sync-button {
+  flex: 1;
+  padding: var(--ns-spacing-md) var(--ns-spacing-lg);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  transition: all var(--ns-transition-fast);
+  font-size: 1em;
+}
+
+.queue-sync-button:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+.queue-sync-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.queue-retry-all-button {
+  padding: var(--ns-spacing-sm) var(--ns-spacing-md);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all var(--ns-transition-fast);
+  white-space: nowrap;
+}
+
+.queue-retry-all-button:active:not(:disabled) {
+  background-color: var(--background-secondary-alt);
+}
+
+.queue-retry-all-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Job List */
+.queue-job-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Empty State */
+.queue-empty-state {
+  text-align: center;
+  padding: var(--ns-spacing-2xl) var(--ns-spacing-lg);
+  color: var(--text-muted);
+}
+
+.queue-empty-icon {
+  margin-bottom: var(--ns-spacing-md);
+}
+
+.queue-empty-icon svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+}
+
+.queue-empty-state p {
+  margin: var(--ns-spacing-xs) 0;
+}
+
+.queue-empty-hint {
+  font-size: 0.9em;
+  color: var(--text-faint);
+}
+
+/* Loading State */
+.queue-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ns-spacing-sm);
+  padding: var(--ns-spacing-2xl);
+  color: var(--text-muted);
+}
+
+.queue-loading-spinner svg {
+  width: 20px;
+  height: 20px;
+  animation: ns-spin 1s linear infinite;
+}
+
+/* Error State */
+.queue-error-state {
+  text-align: center;
+  padding: var(--ns-spacing-2xl);
+  color: var(--text-error);
+}
+
+.queue-error-icon {
+  margin-bottom: var(--ns-spacing-md);
+}
+
+.queue-error-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.queue-error-retry {
+  margin-top: var(--ns-spacing-md);
+  padding: var(--ns-spacing-md) var(--ns-spacing-lg);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+  font-size: 1em;
+}
+
+/* Job Item - Touch-friendly with full-row tap */
+.queue-job-item {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--ns-spacing-md);
+  background-color: var(--background-secondary);
+  border-radius: var(--ns-border-radius);
+  margin-bottom: var(--ns-spacing-sm);
+  gap: var(--ns-spacing-md);
+  transition: background-color var(--ns-transition-fast);
+  min-height: 60px;
+}
+
+.queue-job-item.is-clickable {
+  cursor: pointer;
+}
+
+.queue-job-item.is-clickable:active {
+  background-color: var(--background-secondary-alt);
+}
+
+.queue-job-item.status-failed {
+  background-color: rgba(var(--color-red-rgb), 0.1);
+}
+
+.queue-job-item.status-completed {
+  background-color: rgba(var(--color-green-rgb), 0.05);
+}
+
+/* Status Icon */
+.queue-job-status-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.queue-job-item.status-pending .queue-job-status-icon {
+  color: var(--text-muted);
+}
+
+.queue-job-item.status-processing .queue-job-status-icon {
+  color: var(--interactive-accent);
+}
+
+.queue-job-item.status-processing .queue-job-status-icon svg {
+  animation: ns-spin 1s linear infinite;
+}
+
+.queue-job-item.status-completed .queue-job-status-icon {
+  color: var(--text-success);
+}
+
+.queue-job-item.status-failed .queue-job-status-icon {
+  color: var(--text-error);
+}
+
+/* Job Info */
+.queue-job-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-job-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+  font-size: 0.95em;
+}
+
+.queue-job-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.queue-job-error {
+  font-size: 0.85em;
+  color: var(--text-error);
+  margin-top: var(--ns-spacing-xs);
+  line-height: 1.3;
+}
+
+/* Job Actions - Stacked on mobile */
+.queue-job-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ns-spacing-xs);
+}
+
+.queue-job-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ns-spacing-xs);
+  padding: var(--ns-spacing-sm) var(--ns-spacing-md);
+  min-height: 36px;
+  min-width: 70px;
+  border-radius: var(--ns-border-radius);
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--background-primary);
+  color: var(--text-muted);
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all var(--ns-transition-fast);
+  white-space: nowrap;
+}
+
+.queue-job-action-button:active {
+  background-color: var(--background-secondary-alt);
+  color: var(--text-normal);
+}
+
+.queue-job-action-button.is-loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.queue-retry-button:active {
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+.queue-delete-button:active {
+  border-color: var(--text-error);
+  color: var(--text-error);
+}
+
+.queue-delete-button.is-confirming {
+  background-color: var(--text-error);
+  border-color: var(--text-error);
+  color: var(--text-on-accent);
+}
+
+.queue-job-synced-hint {
+  font-size: 0.8em;
+  color: var(--text-faint);
+  font-style: italic;
+  text-align: right;
+}
+
+.queue-job-spinner svg {
+  width: 16px;
+  height: 16px;
+  animation: ns-spin 1s linear infinite;
+  color: var(--interactive-accent);
+}
+
+/* ============================================================================
+   Onboarding Modal - Mobile First
+   ============================================================================ */
+
+.notebook-scanner-onboarding-modal .modal-content {
+  max-width: 100%;
+}
+
+.onboarding-header {
+  text-align: center;
+}
+
+.onboarding-header h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ns-spacing-sm);
+}
+
+.onboarding-welcome {
+  text-align: center;
+  padding: var(--ns-spacing-lg) 0;
+}
+
+.onboarding-welcome-icon {
+  margin-bottom: var(--ns-spacing-md);
+}
+
+.onboarding-welcome-icon svg {
+  width: 64px;
+  height: 64px;
+  color: var(--interactive-accent);
+}
+
+.onboarding-welcome p {
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: var(--ns-spacing-sm) 0;
+}
+
+.onboarding-steps {
+  margin: var(--ns-spacing-lg) 0;
+}
+
+.onboarding-step {
+  display: flex;
+  gap: var(--ns-spacing-md);
+  padding: var(--ns-spacing-md);
+  background-color: var(--background-secondary);
+  border-radius: var(--ns-border-radius);
+  margin-bottom: var(--ns-spacing-sm);
+  align-items: flex-start;
+}
+
+.onboarding-step-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.onboarding-step-content {
+  flex: 1;
+}
+
+.onboarding-step-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.onboarding-step-description {
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.onboarding-input-group {
+  margin: var(--ns-spacing-lg) 0;
+}
+
+.onboarding-input-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: var(--ns-spacing-sm);
+}
+
+.onboarding-input-group input {
+  width: 100%;
+  padding: var(--ns-spacing-md);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 1em;
+}
+
+.onboarding-input-group input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.onboarding-input-group .input-hint {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: var(--ns-spacing-xs);
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ns-spacing-sm);
+  margin-top: var(--ns-spacing-xl);
+}
+
+.onboarding-button {
+  padding: var(--ns-spacing-md) var(--ns-spacing-lg);
+  min-height: var(--ns-touch-target);
+  border-radius: var(--ns-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 1em;
+  text-align: center;
+  transition: all var(--ns-transition-fast);
+}
+
+.onboarding-button-primary {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+}
+
+.onboarding-button-primary:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+.onboarding-button-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.onboarding-button-secondary {
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.onboarding-button-secondary:active {
+  background-color: var(--background-secondary-alt);
+}
+
+.onboarding-skip {
+  text-align: center;
+  margin-top: var(--ns-spacing-md);
+}
+
+.onboarding-skip-link {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.onboarding-connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ns-spacing-sm);
+  padding: var(--ns-spacing-md);
+  border-radius: var(--ns-border-radius);
+  margin-top: var(--ns-spacing-md);
+}
+
+.onboarding-connection-status.is-success {
+  background-color: rgba(var(--color-green-rgb), 0.1);
+  color: var(--text-success);
+}
+
+.onboarding-connection-status.is-error {
+  background-color: rgba(var(--color-red-rgb), 0.1);
+  color: var(--text-error);
+}
+
+.onboarding-connection-status.is-testing {
+  background-color: var(--background-secondary);
+  color: var(--text-muted);
+}
+
+/* ============================================================================
+   Status Bar Widget
+   ============================================================================ */
+
+.notebook-scanner-status-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--ns-spacing-xs);
+  cursor: pointer;
+  padding: 0 var(--ns-spacing-sm);
+  border-radius: 4px;
+  transition: background-color var(--ns-transition-fast);
+}
+
+.notebook-scanner-status-bar:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.notebook-scanner-status-bar:active {
+  background-color: var(--background-modifier-active-hover);
+}
+
+.notebook-scanner-status-icon {
+  display: flex;
+  align-items: center;
+}
+
+.notebook-scanner-status-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.notebook-scanner-status-bar.is-syncing .notebook-scanner-status-icon svg {
+  animation: ns-spin 1s linear infinite;
+}
+
+.notebook-scanner-status-bar.has-pending .notebook-scanner-status-icon {
+  color: var(--text-accent);
+}
+
+.notebook-scanner-status-bar.has-error .notebook-scanner-status-icon {
+  color: var(--text-error);
+}
+
+.notebook-scanner-status-bar.is-paused .notebook-scanner-status-icon {
+  color: var(--text-warning);
+}
+
+.notebook-scanner-status-bar.is-paused .notebook-scanner-status-text {
+  color: var(--text-warning);
+}
+
+.notebook-scanner-status-text {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.notebook-scanner-status-bar.has-pending .notebook-scanner-status-text,
+.notebook-scanner-status-bar.is-syncing .notebook-scanner-status-text {
+  color: var(--text-normal);
+}
+
+/* ============================================================================
+   Desktop Enhancements (min-width: 600px)
+   ============================================================================ */
+
+@media screen and (min-width: 600px) {
+  /* Modal sizing */
+  .notebook-scanner-upload-modal .modal-content {
+    min-width: 450px;
+    max-width: 550px;
+  }
+
+  .notebook-scanner-queue-modal .modal-content {
+    min-width: 500px;
+    max-width: 650px;
+  }
+
+  .notebook-scanner-onboarding-modal .modal-content {
+    min-width: 450px;
+    max-width: 500px;
+  }
+
+  /* Upload modal footer - horizontal on desktop */
+  .upload-modal-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .upload-cancel-button,
+  .upload-submit-button {
+    width: auto;
+    min-width: 100px;
+  }
+
+  /* Queue toolbar - horizontal on desktop */
+  .queue-modal-toolbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .queue-sync-button {
+    flex: none;
+    width: auto;
+  }
+
+  /* Job actions - horizontal on desktop */
+  .queue-job-actions {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  /* Onboarding actions - horizontal on desktop */
+  .onboarding-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .onboarding-button {
+    width: auto;
+    min-width: 120px;
+  }
+
+  /* Upload completion actions - horizontal on desktop */
+  .upload-completion-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .upload-view-queue-button,
+  .upload-done-button {
+    width: auto;
+    min-width: 100px;
+  }
+
+  /* Upload drop zone - allow hover effects */
+  .upload-drop-zone:hover {
+    border-color: var(--interactive-accent);
+    background-color: var(--background-secondary-alt);
+  }
+
+  .upload-view-queue-button:hover {
+    background-color: var(--background-secondary-alt);
+  }
+
+  .upload-done-button:hover {
+    background-color: var(--interactive-accent-hover);
+  }
+
+  /* Remove button hover */
+  .upload-file-item-remove:hover {
+    color: var(--text-error);
+    background-color: var(--background-modifier-hover);
+  }
+
+  /* Job item hover */
+  .queue-job-item.is-clickable:hover {
+    background-color: var(--background-secondary-alt);
+  }
+
+  /* Button hovers */
+  .upload-cancel-button:hover {
+    background-color: var(--background-secondary-alt);
+  }
+
+  .upload-submit-button:hover:not(:disabled) {
+    background-color: var(--interactive-accent-hover);
+  }
+
+  .queue-refresh-button:hover {
+    background-color: var(--background-secondary-alt);
+    color: var(--text-normal);
+  }
+
+  .queue-sync-button:hover:not(:disabled) {
+    background-color: var(--interactive-accent-hover);
+  }
+
+  .queue-retry-all-button:hover:not(:disabled) {
+    background-color: var(--background-secondary-alt);
+    border-color: var(--interactive-accent);
+  }
+
+  .queue-job-action-button:hover {
+    background-color: var(--background-secondary-alt);
+    color: var(--text-normal);
+  }
+
+  .queue-retry-button:hover {
+    border-color: var(--interactive-accent);
+    color: var(--interactive-accent);
+  }
+
+  .queue-delete-button:hover {
+    border-color: var(--text-error);
+    color: var(--text-error);
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+/* Focus states */
+.upload-drop-zone:focus-visible,
+.upload-cancel-button:focus-visible,
+.upload-submit-button:focus-visible,
+.upload-camera-button:focus-visible,
+.upload-view-queue-button:focus-visible,
+.upload-done-button:focus-visible,
+.queue-filter-select:focus-visible,
+.queue-refresh-button:focus-visible,
+.queue-sync-button:focus-visible,
+.queue-retry-all-button:focus-visible,
+.queue-job-action-button:focus-visible,
+.onboarding-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .upload-file-item.status-uploading .upload-file-item-icon,
+  .queue-refresh-button.is-spinning svg,
+  .queue-job-item.status-processing .queue-job-status-icon svg,
+  .queue-loading-spinner svg,
+  .queue-job-spinner svg,
+  .notebook-scanner-status-bar.is-syncing .notebook-scanner-status-icon svg {
+    animation: none;
+  }
+
+  .upload-drop-zone,
+  .upload-file-item-remove,
+  .upload-cancel-button,
+  .upload-submit-button,
+  .upload-camera-button,
+  .upload-view-queue-button,
+  .upload-done-button,
+  .queue-refresh-button,
+  .queue-sync-button,
+  .queue-retry-all-button,
+  .queue-job-item,
+  .queue-job-action-button,
+  .onboarding-button {
+    transition: none;
+  }
+}
