@@ -9,7 +9,7 @@
  * - Dependency Inversion: Uses interfaces for all dependencies
  */
 
-import { Plugin, Notice, TFolder, TFile, normalizePath, Platform } from 'obsidian';
+import { Plugin, Notice, TFolder, TFile, normalizePath, Platform, Menu } from 'obsidian';
 import type { PluginSettings, ISyncClient, SyncState, PluginData, UploadResponse } from './types';
 import { DEFAULT_SETTINGS, DEFAULT_SYNC_STATE } from './constants';
 import { NotebookScannerSettingTab } from './settings';
@@ -61,13 +61,15 @@ export default class NotebookScannerPlugin extends Plugin {
     // Register commands
     this.registerCommands();
 
-    // Add ribbon icons
-    this.addRibbonIcon('camera', 'Upload Notebook Scans', () => {
-      this.openUploadModal();
-    });
-
-    this.addRibbonIcon('list-todo', 'View Scan Queue', () => {
-      this.openQueueModal();
+    // Add ribbon icon - opens menu on mobile, upload on desktop
+    this.addRibbonIcon('notebook', 'Notebook Scanner', (evt) => {
+      // On mobile, show a menu with options
+      if (Platform.isMobile) {
+        this.showMobileMenu(evt);
+      } else {
+        // On desktop, default to upload (queue accessible via status bar)
+        this.openUploadModal();
+      }
     });
 
     // Start background polling if configured
@@ -355,6 +357,53 @@ export default class NotebookScannerPlugin extends Plugin {
   // ============================================================================
   // Command Implementations (Stubs for Phase 1)
   // ============================================================================
+
+  /**
+   * Show mobile-friendly menu with main actions.
+   */
+  private showMobileMenu(evt: MouseEvent): void {
+    const menu = new Menu();
+
+    menu.addItem((item) => {
+      item
+        .setTitle('Upload Images')
+        .setIcon('camera')
+        .onClick(() => {
+          this.openUploadModal();
+        });
+    });
+
+    menu.addItem((item) => {
+      item
+        .setTitle('View Queue')
+        .setIcon('list-todo')
+        .onClick(() => {
+          this.openQueueModal();
+        });
+    });
+
+    menu.addSeparator();
+
+    menu.addItem((item) => {
+      item
+        .setTitle('Sync Now')
+        .setIcon('refresh-cw')
+        .onClick(() => {
+          this.syncNow();
+        });
+    });
+
+    menu.addItem((item) => {
+      item
+        .setTitle('Settings')
+        .setIcon('settings')
+        .onClick(() => {
+          this.openSettings();
+        });
+    });
+
+    menu.showAtMouseEvent(evt);
+  }
 
   /**
    * Open the upload modal for selecting images.
