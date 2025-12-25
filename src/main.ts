@@ -61,9 +61,13 @@ export default class NotebookScannerPlugin extends Plugin {
     // Register commands
     this.registerCommands();
 
-    // Add ribbon icon
-    this.addRibbonIcon('notebook', 'Notebook Scanner', () => {
+    // Add ribbon icons
+    this.addRibbonIcon('camera', 'Upload Notebook Scans', () => {
       this.openUploadModal();
+    });
+
+    this.addRibbonIcon('list-todo', 'View Scan Queue', () => {
+      this.openQueueModal();
     });
 
     // Start background polling if configured
