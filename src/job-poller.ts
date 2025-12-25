@@ -29,7 +29,7 @@ export interface SyncResult {
  * Configuration for the job poller.
  */
 export interface JobPollerConfig {
-  syncClient: ISyncClient;
+  getSyncClient: () => ISyncClient;
   syncStateManager: SyncStateManager;
   noteCreator: NoteCreator;
   getSettings: () => PluginSettings;
@@ -252,7 +252,7 @@ export class JobPoller {
     const results: SyncResult['results'] = [];
 
     // Fetch completed jobs
-    const completedJobs = await this.config.syncClient.getJobs('completed');
+    const completedJobs = await this.config.getSyncClient().getJobs('completed');
 
     // Filter to unsynced jobs
     const unsyncedJobs = completedJobs.filter(
@@ -298,7 +298,7 @@ export class JobPoller {
   private async syncJob(job: Job): Promise<SyncResult['results'][0]> {
     try {
       // Fetch the result
-      const processedNote = await this.config.syncClient.getResult(job.id);
+      const processedNote = await this.config.getSyncClient().getResult(job.id);
 
       // Create the note
       const createResult = await this.config.noteCreator.createNote(processedNote);

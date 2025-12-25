@@ -145,7 +145,7 @@ export default class NotebookScannerPlugin extends Plugin {
 
     // JobPoller - background polling for completed jobs
     this.jobPoller = new JobPoller({
-      syncClient: this.syncClient,
+      getSyncClient: () => this.syncClient,
       syncStateManager: this.syncStateManager,
       noteCreator: this.noteCreator,
       getSettings: () => this.settings,
@@ -269,10 +269,9 @@ export default class NotebookScannerPlugin extends Plugin {
 
     await this.saveData(data);
 
-    // Update sync client with new settings
-    if (this.syncClient && 'setPluginSettings' in this.syncClient) {
-      (this.syncClient as { setPluginSettings: (s: PluginSettings) => void }).setPluginSettings(this.settings);
-    }
+    // Recreate sync client to pick up new settings
+    // This ensures we switch from MockSyncClient to real SyncClient after onboarding
+    this.syncClient = createSyncClient(this.settings);
 
     // Update NoteCreator settings
     if (this.noteCreator) {
