@@ -21,6 +21,7 @@ export interface QueueModalConfig {
   getSyncedNotePath?: (jobId: string) => string | undefined;
   onDeleteNote?: (notePath: string) => Promise<boolean>;
   onRemoveSyncedJob?: (jobId: string) => Promise<void>;
+  onJobsChanged?: () => void;
 }
 
 /**
@@ -147,6 +148,8 @@ export class QueueModal extends Modal {
     try {
       this.jobs = await this.config.syncClient.getJobs();
       this.updateJobList();
+      // Notify parent to update status bar
+      this.config.onJobsChanged?.();
     } catch (error) {
       console.error('Failed to load jobs:', error);
       this.showError('Failed to load jobs. Please try again.');

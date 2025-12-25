@@ -160,6 +160,11 @@ export default class NotebookScannerPlugin extends Plugin {
           this.statusBarWidget.setSyncProgress(current, total);
         }
       },
+      onStatusChanged: (jobs) => {
+        if (this.statusBarWidget) {
+          this.statusBarWidget.updateFromJobs(jobs);
+        }
+      },
     });
   }
 
@@ -469,6 +474,9 @@ export default class NotebookScannerPlugin extends Plugin {
       },
       onRemoveSyncedJob: async (jobId: string) => {
         await this.syncStateManager.removeSynced(jobId);
+      },
+      onJobsChanged: () => {
+        this.updateStatusBar();
       },
     });
 

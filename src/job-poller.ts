@@ -36,6 +36,7 @@ export interface JobPollerConfig {
   onSyncComplete?: (result: SyncResult) => void;
   onPollerStopped?: () => void;
   onSyncProgress?: (current: number, total: number) => void;
+  onStatusChanged?: (jobs: Job[]) => void;
 }
 
 /**
@@ -185,7 +186,15 @@ export class JobPoller {
 
     try {
       this.isPolling = true;
-      const result = await this.syncCompletedJobs();
+
+      // Fetch all jobs to update status bar
+      const allJobs = await this.config.getSyncClient().getJobs();
+      if (this.config.onStatusChanged) {
+        this.config.onStatusChanged(allJobs);
+      }
+
+      // Sync completed jobs
+      const result = await this.syncCompletedJobsFromList(allJobs);
 
       // Reset error counter on success
       this.consecutiveErrors = 0;
@@ -255,14 +264,20 @@ export class JobPoller {
    * Sync all completed jobs that haven't been synced yet.
    */
   private async syncCompletedJobs(): Promise<SyncResult> {
-    const results: SyncResult['results'] = [];
-
     // Fetch completed jobs
     const completedJobs = await this.config.getSyncClient().getJobs('completed');
+    return this.syncCompletedJobsFromList(completedJobs);
+  }
 
-    // Filter to unsynced jobs
-    const unsyncedJobs = completedJobs.filter(
-      (job) => !this.config.syncStateManager.isSynced(job.id)
+  /**
+   * Sync completed jobs from a pre-fetched list.
+   */
+  private async syncCompletedJobsFromList(allJobs: Job[]): Promise<SyncResult> {
+    const results: SyncResult['results'] = [];
+
+    // Filter to completed, unsynced jobs
+    const unsyncedJobs = allJobs.filter(
+      (job) => job.status === 'completed' && !this.config.syncStateManager.isSynced(job.id)
     );
 
     if (unsyncedJobs.length === 0) {
